@@ -17,7 +17,6 @@
 )]
 #![cfg_attr(test, deny(warnings))]
 
-extern crate rustc_serialize;
 #[cfg(feature = "serde")]
 extern crate serde;
 #[cfg(feature = "serde_json")]
@@ -28,7 +27,6 @@ use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
 
-use rustc_serialize::{Decodable, Decoder, Encodable, Encoder};
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -330,21 +328,6 @@ impl Error for ParseError {
     /// Human readable description for ParseError enum
     fn description(&self) -> &str {
         "MacAddress parse error"
-    }
-}
-
-impl Encodable for MacAddress {
-    /// Encode a MacAddress as canonical form
-    fn encode<E: Encoder>(&self, e: &mut E) -> Result<(), E::Error> {
-        e.emit_str(&self.to_canonical())
-    }
-}
-
-impl Decodable for MacAddress {
-    /// Decode a MacAddress from a string in canonical form
-    fn decode<D: Decoder>(d: &mut D) -> Result<MacAddress, D::Error> {
-        let string = d.read_str()?;
-        string.parse().map_err(|err| d.error(&format!("{}", err)))
     }
 }
 
@@ -669,33 +652,6 @@ mod tests {
         assert!(m2 == m2);
         assert!(m1 == m2);
         assert!(m2 == m1);
-    }
-
-    #[test]
-    fn test_serialize() {
-        use rustc_serialize::json;
-
-        let mac = MacAddress::parse_str("12:34:56:AB:CD:EF").unwrap();
-        assert_eq!("\"12-34-56-ab-cd-ef\"", json::encode(&mac).unwrap());
-    }
-
-    #[test]
-    fn test_deserialize() {
-        use rustc_serialize::json;
-
-        let d = "\"12-34-56-AB-CD-EF\"";
-        let mac = MacAddress::parse_str("12:34:56:AB:CD:EF").unwrap();
-        assert_eq!(mac, json::decode(&d).unwrap());
-    }
-
-    #[test]
-    fn test_serialize_roundtrip() {
-        use rustc_serialize::json;
-
-        let m1 = MacAddress::parse_str("12:34:56:AB:CD:EF").unwrap();
-        let s = json::encode(&m1).unwrap();
-        let m2 = json::decode(&s).unwrap();
-        assert_eq!(m1, m2);
     }
 
     #[test]

@@ -21,11 +21,17 @@
 extern crate serde;
 #[cfg(feature = "serde_json")]
 extern crate serde_json;
+#[cfg(feature = "with_postgres")]
+#[macro_use]
+extern crate tokio_postgres;
 
 use std::default::Default;
 use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
+
+#[cfg(feature = "with_postgres")]
+use tokio_postgres::types::{FromSql, IsNull, ToSql, Type};
 
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -360,6 +366,31 @@ impl<'de> Deserialize<'de> for MacAddress8 {
         }
         deserializer.deserialize_str(MacAddress8Visitor)
     }
+}
+
+#[cfg(feature = "with_postgres")]
+impl<'a> FromSql<'a> for MacAddress8 {
+    fn from_sql(_: &Type, raw: &[u8]) -> Result<MacAddress8, Box<dyn Error + Sync + Send>> {
+        if raw.len() != 8 {
+            return Err("invalid message length".into());
+        }
+        let mut bytes = [0; 8];
+        bytes.copy_from_slice(raw);
+        Ok(MacAddress8::new(bytes))
+    }
+
+    accepts!(MACADDR8);
+}
+
+#[cfg(feature = "with_postgres")]
+impl ToSql for MacAddress8 {
+    fn to_sql(&self, _: &Type, w: &mut Vec<u8>) -> Result<IsNull, Box<dyn Error + Sync + Send>> {
+        w.extend_from_slice(self.as_bytes());
+        Ok(IsNull::No)
+    }
+
+    accepts!(MACADDR8);
+    to_sql_checked!();
 }
 
 // ************** TESTS BEGIN HERE ***************

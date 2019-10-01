@@ -26,6 +26,7 @@ exclude = [
 [dependencies]
 serde = { version = "1.0.80", optional = true }
 serde_json = { version = "1.0.37", optional = true }
+tokio_postgres = { version = "0.4.0-rc.3", package = "tokio-postgres", optional = true }
 
 [badges]
 travis-ci = { repository = "abaumhauer/eui48", branch = "master" }
@@ -36,4 +37,5 @@ appveyor = { repository = "abaumhauer/eui48", branch = "master", service = "gith
 [features]
 default = []
 disp_hexstring = []
+with_postgres = [ "tokio_postgres" ]
 
